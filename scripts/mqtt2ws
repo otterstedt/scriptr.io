@@ -1,0 +1,24 @@
+var message = request.rawBody
+
+var pubsub = require("pubsub");
+var topic = pubsub.getInstance("mqtt2ws");
+
+
+var widgetData = {}
+var accData = {}
+
+widgetData['id'] = "car";
+widgetData['result'] = JSON.parse(message).course;
+
+accData['id'] = "acc";
+accData['result'] = JSON.parse(message).acc;
+accData['result']['roll'] = JSON.parse(message).roll;
+
+topic.publish(widgetData, false);
+topic.publish(accData, false);
+
+return topic.publish(message, false);
+
+
+
+    

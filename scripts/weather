@@ -1,0 +1,76 @@
+//transforms a temperature to degrees on servo motor. Value is between min_degress and max_degrees
+//where min_degrees should indicate min_temp (shown on display) and max_degrees indicate max_temp
+function reMapTemp(temperature, min_degrees, max_degrees, min_temp, max_temp){
+    var deg = Math.floor((temperature - min_temp) * (max_degrees - min_degrees) / (max_temp - min_temp) + min_degrees);
+    if(deg > min_degrees)
+        return min_degrees;
+    if(deg < max_degrees)
+        return max_degrees;
+    return deg;
+}
+ 
+function reMapWeather(weather){
+ 
+    var weatherMap = {
+        sunny: "sunny",
+        clear: "sunny",
+        mostlysunny: "sunny",
+ 
+        partlysunny: "partlycloudy",
+        partlycloudy: "partlycloudy",
+ 
+        cloudy: "cloudy",
+        mostlycloudy: "cloudy",
+        hazy: "cloudy",
+        fog: "cloudy",
+ 
+        rain: "rain",
+        chancerain: "rain",
+ 
+        tstorms: "thunderstorms",
+        chancetstorms: "thunderstorms",
+ 
+        sleet: "snow",
+        snow: "snow",
+        chanceflurries: "snow",
+        chancesleet: "snow",
+        chancesnow: "snow",
+        flurries: "snow"
+    };
+    var degMap = {
+        sunny: 30,
+        partlycloudy: 55,
+        cloudy: 80,
+        rain: 105,
+        tstorms: 130,
+        snow: 150
+    }
+    var w = weatherMap[weather];
+    return degMap[w];
+}
+var config = apsdb.require("configuration");
+console.log(JSON.stringify(config))
+var output = "";
+var apiResponse = apsdb.callHttp("http://api.wunderground.com/api/"+config.wundergroundApiKey+"/conditions/q/"+config.wundergroundLocation+".json");
+//console.log(JSON.stringify(apiResponse))
+if( apiResponse.status == 200){
+    var parsedResponse = JSON.parse(apiResponse.body);
+ 
+    //output_value = currentTemp;
+    if(request.parameters.api == "weather"){
+        var parsedResponse = JSON.parse(apiResponse.body);
+        var w = parsedResponse.current_observation.icon;
+        output = "#" + reMapWeather(w) + "#"
+    }else{
+        var currentTemp = parsedResponse.current_observation.temp_c;
+        var output_value = 0;
+ 
+        //transform into some value in degrees (rotation of servo motor)
+        output_value = reMapTemp(currentTemp, 150, 0, -20, 40);
+        output = "#" + output_value + "#";
+    }
+}else{
+    output = "#ERROR#";
+}
+ 
+return output;

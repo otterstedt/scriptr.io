@@ -1,0 +1,40 @@
+/* 
+	POST	sensehat/device/<deviceId>
+    GET	sensehat/device/<deviceId>
+    
+*/
+
+var documents = require("document");
+
+var latestSensehatDocuments = documents.getInstance("sensehatLatest");
+
+var deviceId = request.pathInfo
+
+if (deviceId) {
+
+    switch(request.method) {
+        case "GET":
+            document = documents.get(deviceId);
+            //device.measurements = JSON.parse(device.measurements)
+            device = JSON.parse(document.result.measurements)
+            device['deviceId'] = deviceId
+            break;
+        case "PUT":
+            var data = { "key": deviceId, "measurements": request.rawBody }
+            device = documents.save(data);
+            break;
+        case "POST":
+            var data = { "key": deviceId, "measurements": request.rawBody }
+            device = documents.create(data);
+            break;
+        case "DELETE":
+            device = documents.delete(deviceId);
+            break;
+        default:
+            response.setStatus(501);    // Not Implemented
+    }
+}
+
+return device;
+
+
