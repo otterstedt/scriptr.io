@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <canvas id="canvas-compass"></canvas>
+        <canvas id="canvas-acceleration"></canvas>
+    </body>
+    <script src="https://cdn.rawgit.com/Mikhus/canvas-gauges/gh-pages/download/2.1.5/all/gauge.min.js"></script>
+    <script src="https://unpkg.com/mqtt@2.18.8/dist/mqtt.min.js"></script>
+    <script>
+            var gauge = new RadialGauge({
+            renderTo: 'canvas-compass',
+            minValue: 0,
+            maxValue: 360,
+           majorTicks: [
+                "N",
+                "NE",
+                "E",
+                "SE",
+                "S",
+                "SW",
+                "W",
+                "NW",
+                "N"
+            ],
+            minorTicks: 22,
+            ticksAngle: 360,
+            startAngle: 180,
+            strokeTicks: false,
+            highlights: false,
+            colorPlate: "#a33",
+            colorMajorTicks: "#f5f5f5",
+            colorMinorTicks: "#ddd",
+            colorNumbers: "#ccc",
+            colorNeedle: "rgba(240, 128, 128, 1)",
+            colorNeedleEnd: "rgba(255, 160, 122, .9)",
+            valueBox: true,
+            valueTextShadow: false,
+            colorCircleInner: "#fff",
+            colorNeedleCircleOuter: "#ccc",
+            needleCircleSize: 5,
+            needleCircleOuter: true,
+            animationRule: "linear",
+            needleType: "line",
+            needleStart: 75,
+            needleEnd: 99,
+            needleWidth: 3,
+            borders: true,
+            borderInnerWidth: 0,
+            borderMiddleWidth: 0,
+            borderOuterWidth: 0,
+            colorBorderOuter: "#ccc",
+            colorBorderOuterEnd: "#ccc",
+            colorNeedleShadowDown: "#222",
+            borderShadowWidth: 0,
+            animationTarget: "plate",
+            animationDuration: 0,
+            value: 0,
+            animateOnInit: false,
+            width: 800,
+            height: 600
+        }).draw(); 
+        
+        var acceleration = new LinearGauge({
+            renderTo: 'canvas-acceleration',
+            width: 400,
+            height: 150,
+            minValue: -1,
+            maxValue: 1,
+            majorTicks: [
+                "-1",
+                "0",
+                "1"
+            ],
+            minorTicks: 10,
+            strokeTicks: true,
+            colorPlate: "#fff",
+            borderShadowWidth: 0,
+            borders: false,
+            barBeginCircle: false,
+            tickSide: "left",
+            numberSide: "left",
+            needleSide: "left",
+            needleType: "line",
+            needleWidth: 3,
+            colorNeedle: "#222",
+            colorNeedleEnd: "#222",
+            animationDuration: 10,
+            animationRule: "linear",
+            animationTarget: "plate",
+            barWidth: 5,
+            ticksWidth: 50,
+            ticksWidthMinor: 15,
+            valueBox: true
+        }).draw();
+
+                
+        client1 = new WebSocket("wss://api.scriptr.io/RDQxRjNGRDA3Mw==");
+        var previousValue = null
+        var acc_x = null
+        
+        client1.onopen = function (event) {
+            console.log("onopen")
+            client1.send(JSON.stringify({
+                "method":"Subscribe",
+                "params":{
+                    "channel":"mqtt2ws"//this client will only receive translated chats
+                }
+            }), client1);
+        }
+        
+        client1.onmessage = (event) =>  {
+            console.log("onmessage")
+
+            console.log(event.data)
+            
+            measurements = JSON.parse(event.data)
+            
+            console.log(measurements)
+            //console.log(measurements.course)
+            
+            if (measurements.course) {
+                var value = parseInt(measurements.course);
+                var acc_x = parseFloat(measurements.acc.x);
+                
+                if (value != previousValue) {
+                	gauge.value = value
+                	console.log(value)
+                    previousValue = value
+                }
+                
+                if (acc_x != null) {
+                	acceleration.value = acc_x
+                	console.log(acc_x)
+                    //previousValue = value
+                }
+
+            }
+        }
+        
+        
+    </script>
+</html>
